@@ -1,7 +1,11 @@
+
+
+
 import datetime, pytz
 tz = pytz.timezone('Asia/Bangkok')
 
 import pandas as pd
+import numpy as np
 def now():
     now1 = datetime.datetime.now(tz)
     month_name = 'x มกราคม กุมภาพันธ์ มีนาคม เมษายน พฤษภาคม มิถุนายน กรกฎาคม สิงหาคม กันยายน ตุลาคม พฤศจิกายน ธันวาคม'.split()[now1.month]
@@ -12,6 +16,8 @@ def now():
    
 
 def import_gg_xlsx(file_id, file_name):
+    
+
     from pydrive.auth import GoogleAuth
     from pydrive.drive import GoogleDrive 
     from google.colab import auth 
@@ -137,10 +143,142 @@ def mapping_base_info_from_main(df_m, df, col_name):
     df['effdt_en_yyyymm'] = df[col_name].map(df_m.set_index(col_name)['effdt_en_yyyymm'])
     df['merge_hiredate_en'] = df[col_name].map(df_m.set_index(col_name)['merge_hiredate_en'])
     df['merge_hiredate_en_yyyymm'] = df[col_name].map(df_m.set_index(col_name)['merge_hiredate_en_yyyymm'])
-    
-    
-    
     return df
+
+
+
+def mapping_ey_from_main(df_m, df, col_name, today_date):
+    
+    df_m['today_date'] = today_date
+
+    df_m['พนักงานเข้าใหม่ยังไม่ถึงปี'] = ''
+    df_m.loc[(df_m['empl_status'].isin(['A'])  ) &
+                 (pd.to_datetime(df_m['today_date'], format='%d/%m/%Y') - pd.to_datetime(df_m['hire_date_en'], format='%d/%m/%Y')  < '365 days' ), 'พนักงานเข้าใหม่ยังไม่ถึงปี']  = 'พนักงานเข้าใหม่ยังไม่ถึงปี'
+
+    df_m.loc[(df_m['action'] == 'REH') , 'พนักงานเข้าใหม่ยังไม่ถึงปี']  = ''
+
+
+#     df_m['วันสิ้นสภาพ'] = ''
+    df_m.loc[(df_m['empl_status'].isin(['T','D'])  ), 'วันสิ้นสภาพ']  = df_m['effdt_en']
+    
+    
+    
+    
+    df['rc_code']                         = df[col_name].map(df_m.set_index(col_name)['rc_code'] )
+    df['descr_rc_code']                   = df[col_name].map(df_m.set_index(col_name)['descr_rc_code'] )
+    df['descr_c']                         = df[col_name].map(df_m.set_index(col_name)['descr_c'] )
+    df['1. กำกับสายงาน']                   = df[col_name].map(df_m.set_index(col_name)['1. กำกับสายงาน'] )
+    df['2. สาย']                          = df[col_name].map(df_m.set_index(col_name)['2. สาย'] )
+    df['3. กลุ่ม']                          = df[col_name].map(df_m.set_index(col_name)['3. กลุ่ม'] )
+    df['merge_hiredate_en']               = df[col_name].map(df_m.set_index(col_name)['merge_hiredate_en'] )
+    df['age']                             = df[col_name].map(df_m.set_index(col_name)['age'] )
+    df['sex']                             = df[col_name].map(df_m.set_index(col_name)['sex'] )
+    df['sys_retireyear']                  = df[col_name].map(df_m.set_index(col_name)['sys_retireyear'] )
+    df['empl_class']                      = df[col_name].map(df_m.set_index(col_name)['empl_class'] )
+    df['effdt']                           = df[col_name].map(df_m.set_index(col_name)['effdt'] )
+    df['action']                          = df[col_name].map(df_m.set_index(col_name)['action'] )
+    df['action_reason']                   = df[col_name].map(df_m.set_index(col_name)['action_reason'] )
+    df['action_reason_descr']             = df[col_name].map(df_m.set_index(col_name)['action_reason_descr'] )
+    df['พนักงานเข้าใหม่ยังไม่ถึงปี']             = df[col_name].map(df_m.set_index(col_name)['พนักงานเข้าใหม่ยังไม่ถึงปี'] )
+    df['วันสิ้นสภาพ']                        = df[col_name].map(df_m.set_index(col_name)['วันสิ้นสภาพ'] )
+    df['เรียงลำดับสายงาน']                   = df[col_name].map(df_m.set_index(col_name)['เรียงลำดับสายงาน'] )
+    df['สายงานภายใต้การรับผิดชอบของ BP ณ ปัจจุบัน (Fix Code กรณีมีการแก้ไขต้องปรับเปลี่ยนช่องด้วย)'] = df[col_name].map(df_m.set_index(col_name)['สายงานภายใต้การรับผิดชอบของ BP ณ ปัจจุบัน (Fix Code กรณีมีการแก้ไขต้องปรับเปลี่ยนช่องด้วย)'] )
+    
+    
+    a = ['CON',  'RLS',  'WHI']
+    df = df[~df.action_reason.isin(a)]
+
+
+    return df
+
+
+
+
+def mapping_ey_from_main_EY(df_m, df, col_name, today_date, field11,field12,field13,    field21,field22,field23,    field31,field32,field33  ,  
+                            field12_3m, field22_12m  , field32_12m 
+                           ):
+    
+    df_m['today_date'] = today_date
+
+    df_m['พนักงานเข้าใหม่ยังไม่ถึงปี'] = ''
+    df_m.loc[(df_m['empl_status'].isin(['A'])  ) &
+                 (pd.to_datetime(df_m['today_date'], format='%d/%m/%Y') - pd.to_datetime(df_m['hire_date_en'], format='%d/%m/%Y')  < '365 days' ), 'พนักงานเข้าใหม่ยังไม่ถึงปี']  = 'พนักงานเข้าใหม่ยังไม่ถึงปี'
+
+    df_m.loc[(df_m['action'] == 'REH') , 'พนักงานเข้าใหม่ยังไม่ถึงปี']  = ''
+
+
+#     df_m['วันสิ้นสภาพ'] = ''
+    df_m.loc[(df_m['empl_status'].isin(['T','D'])  ), 'วันสิ้นสภาพ']  = df_m['effdt_en']
+    
+
+#     df = df.drop(['สายงาน'],axis =1)
+    
+    df['รหัสสังกัด']                         = df[col_name].map(df_m.set_index(col_name)['rc_code'] )
+    df['สังกัด']                   = df[col_name].map(df_m.set_index(col_name)['descr_rc_code'] )
+    df['corporate']                         = df[col_name].map(df_m.set_index(col_name)['descr_c'] )
+    df['กำกับสายงาน']                   = df[col_name].map(df_m.set_index(col_name)['1. กำกับสายงาน'] )
+    df['สาย']                          = df[col_name].map(df_m.set_index(col_name)['2. สาย'] )
+    df['กลุ่ม']                          = df[col_name].map(df_m.set_index(col_name)['3. กลุ่ม'] )
+    df['merge_hiredate_en']               = df[col_name].map(df_m.set_index(col_name)['merge_hiredate_en'] )
+    df['age']                             = df[col_name].map(df_m.set_index(col_name)['age'] )
+    df['sex']                             = df[col_name].map(df_m.set_index(col_name)['sex'] )
+    df['ปีเกษียณ ค.ศ.']                  = df[col_name].map(df_m.set_index(col_name)['sys_retireyear'] )
+    df['empl_class']                      = df[col_name].map(df_m.set_index(col_name)['empl_class'] )
+    df['effdt']                           = df[col_name].map(df_m.set_index(col_name)['effdt'] )
+    df['action']                          = df[col_name].map(df_m.set_index(col_name)['action'] )
+    df['action_reason']                   = df[col_name].map(df_m.set_index(col_name)['action_reason'] )
+    df['action_reason_descr']             = df[col_name].map(df_m.set_index(col_name)['action_reason_descr'] )
+    df['พนักงานเข้าใหม่ยังไม่ถึงปี']             = df[col_name].map(df_m.set_index(col_name)['พนักงานเข้าใหม่ยังไม่ถึงปี'] )
+    df['วันสิ้นสภาพ']                        = df[col_name].map(df_m.set_index(col_name)['วันสิ้นสภาพ'] )
+    df['เรียงลำดับสายงาน']                   = df[col_name].map(df_m.set_index(col_name)['เรียงลำดับสายงาน'] )
+    df['หน่วยงานที่ดูแล'] = df[col_name].map(df_m.set_index(col_name)['สายงานภายใต้การรับผิดชอบของ BP ณ ปัจจุบัน (Fix Code กรณีมีการแก้ไขต้องปรับเปลี่ยนช่องด้วย)'] )
+    
+    
+    a = ['CON',  'RLS',  'WHI']
+    df = df[~df.action_reason.isin(a)]
+
+
+#     this_year_str = str(this_year)
+#     this_year_before = str(this_year-1)
+#     field11 = '1.1 สิทธิลาพักผ่อนยกมาจาก ' + this_year_before + ' ใช้ภายใน 31/03/'+ this_year_str
+#     field12 = '1.2 ยอดใช้ไปลาพักผ่อนยกมาจาก ' + this_year_before
+#     field13 = '1.3 คงเหลือลาพักผ่อนยกมาจาก ' + this_year_before
+    
+#     field21 = '2.1 สิทธิลาพักผ่อนประจำปี ' + this_year_str
+#     field22 = '2.2 ยอดใช้ไปลาพักผ่อนประจำปี ' + this_year_str
+#     field23 = '2.3 คงเหลือลาพักผ่อนปี ' + this_year_str
+    
+#     field31 = '3.1 สิทธิลาพักผ่อนสะสม'
+#     field32 = '3.2 ยอดใช้ไปลาพักผ่อนสะสม'
+#     field33 = '3.3 คงเหลือลาพักผ่อนสะสม'
+    
+    
+
+    df = df.rename(columns={
+                            'empl_status' : 'สถานะ',
+                            'ABSV_DYS_CARRYOVER' : field11,
+                            'KTB_ABS_TAKE_FW' : field12,
+                            'KTB_ABS_TAKE_FW_3M' : field12_3m,
+
+                            'ABSV_DYS_EARN_YTD' : field21,
+                            'ABSV_DYS_TAKE_YTD' : field22,
+                            'ABSV_DYS_TAKE_YTD_12M' : field22_12m,
+        
+                            'sum ตารางยกยอด 3 ปีจริงที่เริ่มรันตอนสิ้นปี 2564 ABSV_DYS_CARRYOVER' : field31,
+                            'sum ตารางยกยอด 3 ปีจริงที่เริ่มรันตอนสิ้นปี 2564 ABSV_DYS_TAKE_YTD' : field32,
+                            'sum ตารางยกยอด 3 ปีจริงที่เริ่มรันตอนสิ้นปี 2564 ABSV_DYS_TAKE_YTD_ALL' : field32_12m,
+        
+
+    })
+
+    
+    df = df[(df['สถานะ'].isin(['A','L','S']))]
+    df['ปีเกษียณ ค.ศ.'] = df['ปีเกษียณ ค.ศ.'] - 543
+    return df
+    
+    
+
+
 
 
 
@@ -175,6 +313,309 @@ def fnc_senddata_to_googlesheet(df , googlesheet_url, sheet_name, column_list, s
     #wb2 = gc.open_by_url('https://docs.google.com/spreadsheets/d/{}/edit#gid=0'.format(val_4_2))
     wb2 = gc.open_by_url(googlesheet_url)
 
+    
+    
+    try:
+            sheet1 = wb2.worksheet(sheet_name)
+#             wb2.del_worksheet(sheet1)
+
+#             worksheet1 = wb2.add_worksheet(title=sheet_name, rows="100", cols="20")
+    except:
+            worksheet1 = wb2.add_worksheet(title=sheet_name, rows="100", cols="20")
+    
+    
+    #worksheet1 เสมือน sheet_destination_sheet
     sheet_destination_sheet = wb2.worksheet(sheet_name)
     wb2.values_clear("'{}'!{}".format(sheet_name,sheet_range))
     set_with_dataframe(sheet_destination_sheet, df, row=10, include_column_header=True) 
+    
+    
+    
+    
+    
+    
+    
+    
+def grouptake1_12month(df,  filter_type, key_type_value):
+#     listofmonth_int = ['01','02','03','04','05','06','07','08','09','10','11','12']
+    listofmonth_int = ['1','2','3','4','5','6','7','8','9','10','11','12']
+    key_mapping = 'emplid'
+    key_sum = 'DURATION_DAYS'
+    key_m = 'ABSENCE_DATE_only_month'
+    key_type = 'ประเภทการลาพักผ่อน 3 กลุ่ม'
+    
+    key_type_value = key_type_value.replace('1.2 ','').replace('2.2 ','').replace('3.2 ','')
+    
+    newlist = []
+    count = 1
+    # for x in range(1, 10):
+    #     field_rename = 'สิทธิลาพักผ่อนประจำปี : รวมวันลาใช้ไป ณ เดือน ' + str(x)
+    for x1 in listofmonth_int:
+        newlist.append(x1)
+        
+        field_rename = key_type_value +  ' ณ เดือน ' + x1 #+ ' (หน่วย:วัน)' 
+
+        
+#         print(newlist)
+#         print(field_rename)
+
+        #step1 group value with month
+#         df_group           = df[  (df[key_type]).isin([key_type_value]) & (df[key_m]).isin(newlist)  ] \
+#                                     .groupby(key_mapping).agg({key_sum: 'sum'}).reset_index().rename(columns={key_sum:field_rename})
+        
+        if filter_type == 'ลาพักผ่อนสะสม':
+                df_group = df[      (
+                                        (df['ประเภทการลาพักผ่อน 3 กลุ่ม'] == filter_type) & 
+                                        (df['ABSENCE_DATE_only_month'].isin(newlist))  
+                                    )   |
+                                        (df['ประเภทการลาพักผ่อน 3 กลุ่ม'] == 'ลาพักผ่อนสะสมปีก่อนหน้าปัจจุบัน') 
+                             ] \
+                    .groupby('emplid').agg({'DURATION_DAYS': 'sum'}).reset_index().rename(columns={'DURATION_DAYS':field_rename})
+                
+        else:
+                df_group = df[  (df['ประเภทการลาพักผ่อน 3 กลุ่ม'] == filter_type) & (df['ABSENCE_DATE_only_month'].isin(newlist))  ] \
+                    .groupby('emplid').agg({'DURATION_DAYS': 'sum'}).reset_index().rename(columns={'DURATION_DAYS':field_rename})
+        
+        
+        
+#         print( 'key_type_value ' + key_type_value)
+#         print( 'ABSENCE_DATE_only_month ' + newlist)
+#         print( 'field_rename ' + field_rename)
+        #step2 mapping data
+        df[key_mapping] = df[key_mapping].astype(int)
+        df_group[key_mapping] = df_group[key_mapping].astype(int)
+        df[field_rename]       = df[key_mapping].map(df_group.set_index(key_mapping)[field_rename])
+
+#         print("----------------df group field_rename--------------")
+#         print(df_group.head())
+        
+        #step3 fillna, replace fill
+        df.loc[(      df[field_rename].isnull() ), field_rename]  = 0.0
+        count                       = count +1
+#         print(field_rename)
+
+        
+        
+        
+        
+def assign_field_to_float(df, f):
+    df[f] = df[f].fillna('0.0')
+    df.loc[(df[f] == '' ),f]='0.0'
+    df[f] = df[f].astype(float)
+    return df
+
+
+
+def parameter_this_year(this_year):
+
+    return this_year
+
+
+def upload_file_split_sheet(df, id_googlesheet, 
+                            this_year 
+                           
+                           ,field11, field12, field13
+                           ,field21, field22, field23
+                           ,field31, field32, field33,
+                            
+                            
+                            f1_value, f2, f3, f3_value, my_sheet, my_clean_range
+                           ):
+    
+
+    
+    df_new = df[   df['หน่วยงานที่ดูแล'].isin([f1_value])  & df[f2].isin(['A'])  &  df[f3].isin([f3_value])          ]
+
+    
+#     this_year_str = str(this_year)
+#     this_year_before = str(this_year-1)
+#     field11 = '1.1 สิทธิลาพักผ่อนยกมาจาก ' + this_year_before + ' ใช้ภายใน 31/03/'+ this_year_str
+#     field12 = '1.2 ยอดใช้ไปลาพักผ่อนยกมาจาก ' + this_year_before
+#     field13 = '1.3 คงเหลือลาพักผ่อนยกมาจาก ' + this_year_before
+    
+#     field21 = '2.1 สิทธิลาพักผ่อนประจำปี ' + this_year_str
+#     field22 = '2.2 ยอดใช้ไปลาพักผ่อนประจำปี ' + this_year_str
+#     field23 = '2.3 คงเหลือลาพักผ่อนปี ' + this_year_str
+    
+#     field31 = '3.1 สิทธิลาพักผ่อนสะสม'
+#     field32 = '3.2 ยอดใช้ไปลาพักผ่อนสะสม'
+#     field33 = '3.3 คงเหลือลาพักผ่อนสะสม'
+    
+        
+    df_new = df_new.rename(columns={    '3. กลุ่ม' : 'กลุ่ม',
+                                        'rc_code' : 'รหัสสังกัด',
+                                        'descr_rc_code' : 'สังกัด',
+                                        '1.1 สิทธิการลาพักผ่อนประจำปียกมาจากปีที่แล้ว' : field11,
+                                        '1.2 ยอดใช้ไป - สิทธิการลาพักผ่อนประจำปียกมาจากปีที่แล้ว' : field12,                          
+                                        '1.3 คงเหลือ - สิทธิการลาพักผ่อนประจำปียกมาจากปีที่แล้ว' : field13, 
+                                    
+                                    
+                                        '2.1 สิทธิการลาพักผ่อนประจำปีปัจจุบัน' : field21,
+                                        '2.2 ยอดใช้ไป - สิทธิการลาพักผ่อนประจำปีปัจจุบัน' : field22,                          
+                                        '2.3 คงเหลือ - สิทธิการลาพักผ่อนประจำปีปัจจุบัน' : field23,     
+                                    
+                                        '3.1 สิทธิการลาพักผ่อนสะสมใช้ได้ 3 ปี' : field31,
+                                        '3.2 ยอดใช้ไป - สิทธิการลาพักผ่อนสะสมใช้ได้ 3 ปี' : field32,                          
+                                        '3.3 คงเหลือ - สิทธิการลาพักผ่อนสะสมใช้ได้ 3 ปี' : field33,     
+                                    
+    })
+
+
+    df_new.sort_values([field33], ascending=[False],  na_position ='first', inplace=True)
+    column_BP = [                
+                                'emplid',
+                                'name',
+                                'ตำแหน่ง',
+                                'กลุ่ม',
+                                'รหัสสังกัด',
+                                'สังกัด',
+                                'กลุ่มที่ต้อง adjust วันลา',
+
+
+                                field31,
+                                field32,
+                                field33,
+
+        
+                                field21,
+                                field22,
+                                field23,
+
+                                field11,
+                                field12,
+                                field13,
+             
+        
+        
+#                                 'หน่วยงานที่ดูแล'
+                              ]
+    df_new = df_new.drop(['หน่วยงานที่ดูแล'],axis =1)
+    fnc_senddata_to_googlesheet(df_new, id_googlesheet, my_sheet  , column_BP, my_clean_range) 
+    
+    
+    
+    
+def run_e_status(df,e):
+    df[e] = 0
+    df.loc[(df[e] == 'A' ),e]=1
+    df.loc[(df[e] == 'L' ),e]=2
+    df.loc[(df[e] == 'S' ),e]=3
+    df.loc[(df[e] == 'T' ),e]=4
+    df.loc[(df[e] == 'D' ),e]=5
+    return df
+    
+    
+def fnc_find_this_year_match_function(today_date_month, my_text):
+    my_column_name = ''
+    if(today_date_month =='1'):
+        my_column_name = my_text + '1'
+    elif(today_date_month =='2'):
+        my_column_name = my_text + '2'
+    elif(today_date_month =='3'):
+        my_column_name = my_text + '3'
+    elif(today_date_month =='4'):
+        my_column_name = my_text + '4'
+    elif(today_date_month =='5'):
+        my_column_name = my_text + '5'
+    elif(today_date_month =='6'):
+        my_column_name = my_text + '6'
+    elif(today_date_month =='7'):
+        my_column_name = my_text + '7'
+    elif(today_date_month =='8'):
+        my_column_name = my_text + '8'
+    elif(today_date_month =='9'):
+        my_column_name = my_text + '9'
+    elif(today_date_month =='10'):
+        my_column_name = my_text + '10'
+    elif(today_date_month =='11'):
+        my_column_name = my_text + '11'
+    elif(today_date_month =='12'):
+        my_column_name = my_text + '12'
+
+     
+    return my_column_name
+    
+    
+    
+def fnc_find_this_year_match_function_before_month(today_date_month, my_text):
+
+    my_column_name = ''
+    if(today_date_month =='1'):
+        my_column_name = my_text + '1'
+    elif(today_date_month =='2'):
+        my_column_name = my_text + '1'
+    elif(today_date_month =='3'):
+        my_column_name = my_text + '2'
+    elif(today_date_month =='4'):
+        my_column_name = my_text + '3'
+    elif(today_date_month =='5'):
+        my_column_name = my_text + '4'
+    elif(today_date_month =='6'):
+        my_column_name = my_text + '5'
+    elif(today_date_month =='7'):
+        my_column_name = my_text + '6'
+    elif(today_date_month =='8'):
+        my_column_name = my_text + '7'
+    elif(today_date_month =='9'):
+        my_column_name = my_text + '8'
+    elif(today_date_month =='10'):
+        my_column_name = my_text + '9'
+    elif(today_date_month =='11'):
+        my_column_name = my_text + '10'
+    elif(today_date_month =='12'):
+        my_column_name = my_text + '11'
+
+     
+    return my_column_name
+    
+    
+    
+
+def leave_convert_ceiling05(df, field1, field2, field3 ):
+#     listofmonth_int = ['01','02','03','04','05','06','07','08','09','10','11','12']
+    listofmonth_int = ['1','2','3','4','5','6','7','8','9','10','11','12']
+    for x in listofmonth_int:
+        field_name_avg = field1 + str(x) + ')'
+        field_name = field2 + str(int(x))
+        df[field_name_avg] = np.ceil((df[field_name] / df[field3])  *2)/2
+
+    return df
+
+
+
+def rename_googlesheet(id1, rename_file):
+    from pydrive.auth import GoogleAuth
+    from pydrive.drive import GoogleDrive 
+    from google.colab import auth 
+    from oauth2client.client import GoogleCredentials
+    auth.authenticate_user()
+    gauth = GoogleAuth()
+    gauth.credentials = GoogleCredentials.get_application_default()
+    drive = GoogleDrive(gauth)
+
+
+    file1 = drive.CreateFile({'id': id1})
+    file1.Upload()                 # Upload new title.
+    a=drive.auth.service.files().get(fileId=id1).execute()
+    a['title']=rename_file
+    update=drive.auth.service.files().update(fileId=id1,body=a).execute()
+
+
+
+    
+def copy_fileid_to_specific_folder(id1, specific_folderid, rename_file):
+    from pydrive.auth import GoogleAuth
+    from pydrive.drive import GoogleDrive 
+    from google.colab import auth 
+    from oauth2client.client import GoogleCredentials
+    auth.authenticate_user()
+    gauth = GoogleAuth()
+    gauth.credentials = GoogleCredentials.get_application_default()
+    drive = GoogleDrive(gauth)
+
+    file1 = drive.CreateFile({'id': id1})
+    file1.Upload()                 # Upload new title.
+
+    drive.auth.service.files().copy(fileId=id1, body={"parents": [{"id": specific_folderid}], 'title': rename_file}).execute()
+    
+    
