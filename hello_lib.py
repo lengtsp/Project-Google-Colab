@@ -618,4 +618,127 @@ def copy_fileid_to_specific_folder(id1, specific_folderid, rename_file):
 
     drive.auth.service.files().copy(fileId=id1, body={"parents": [{"id": specific_folderid}], 'title': rename_file}).execute()
     
+
+    
+    
+    
+
+#reference https://medium.com/@simonprdhm/how-to-send-emails-with-gmail-using-python-f4a8bcb6a9cc
+def send_email_when_finish(finished_user, finished_pass, finished_send_to,  Folder_querymain_ID, Folder_querymain_for_HRMS, file_date ):
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    # me == my email address
+    # you == recipient's email address
+    me = finished_user
+    you = finished_send_to
+
+    # Create message container - the correct MIME type is multipart/alternative.
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = "[Querymain Run Complete] ข้อมูล ณ วันที่ " + file_date
+    msg['From'] = me
+    msg['To'] = you
+
+    file1 = "https://drive.google.com/drive/folders/" + Folder_querymain_ID
+    file2 = "https://drive.google.com/drive/folders/" + Folder_querymain_for_HRMS
+    
+    #monitor
+    file3 = "https://drive.google.com/drive/folders/1rkTLVu8UHJ338bfEuhAiwOVUMEhnsuV5"
+    
+    
+    #สรุป report
+    file4 = "https://docs.google.com/spreadsheets/d/1EaVFbZrNsiE9fT_DXrCoSN9PNZmzXte5WgB0SVT72PI/edit"
+    
+    #ทะเบียนพนักงาน
+    file5 = "https://drive.google.com/drive/folders/15qmbj-jy0A4fIttJMjfYnz_XzPwDJh_8"
+    
+    #file Dashboard
+    file6 = "https://drive.google.com/drive/folders/0B8onEo_a5GOlRTBScGRBY0R5MW8?resourcekey=0-cu-OiVCf02Nwj1cmhmxCLQ"
+    # Create the body of the message (a plain-text and an HTML version).
+#     text = "Hi!\nHow are you?\nHere is the link you wanted:\nhttp://www.python.org"
+
+
+
+    html = """\
+    <html>
+      <head></head>
+      <body>
+        <p>Hi!<br>
+           <b><h1>พี่ดำรันเสร็จแล้วนะ</h1></b>
+           <u><h3>Main</h3></u>
+           1. เข้าไปตรวจสอบ Querymain รายเดือนได้ที่ <a href="%s">link</a> (สำหรับคนทั่วไป) <br>
+           2. Querymain ที่มีครบทุก field ให้เช็คที่นี้ <a href="%s">link</a> (สำหรับ HRMS) <br>
+           3. Monitor ทุกวัน <a href="%s">link</a><br>
+           
+           <br>
+           <u><h3>หัวข้อรายเดือน</h3></u>
+           4. สรุป report ทีม <a href="%s">link</a><br>
+           5. ทะเบียนพนักงาน <a href="%s">link</a><br>
+           6. file dashboard <a href="%s">link</a><br>
+        </p>
+      </body>
+    </html>
+    """ % (file1, file2, file3, file4, file5, file6)
+
+    # Record the MIME types of both parts - text/plain and text/html.
+#     part1 = MIMEText(text, 'plain')
+    part2 = MIMEText(html, 'html')
+
+    # Attach parts into message container.
+    # According to RFC 2046, the last part of a multipart message, in this case
+    # the HTML message, is best and preferred.
+#     msg.attach(part1)
+    msg.attach(part2)
+    # Send the message via local SMTP server.
+    mail = smtplib.SMTP('smtp.gmail.com', 587)
+
+    mail.ehlo()
+
+    mail.starttls()
+
+    mail.login(me, finished_pass)
+    mail.sendmail(me, you, msg.as_string())
+    mail.quit()
+    
+    
+    
+    
+
+def convert_column_to_date(df, field1):
+    df[field1] = pd.to_datetime(df[field1],format='%d/%m/%Y' , errors='coerce')
+    
+    
+    
+    
+    
+def insert_intogooglesheet(url,df, sheet_name, clearspace, my_index_startrow):
+
+
+    from pydrive.auth import GoogleAuth
+    from pydrive.drive import GoogleDrive 
+    from google.colab import auth 
+    from oauth2client.client import GoogleCredentials
+
+
+    auth.authenticate_user()
+    gauth = GoogleAuth()
+    gauth.credentials = GoogleCredentials.get_application_default()
+    drive = GoogleDrive(gauth)
+
+    #สำหรับจัดการ Google sheet
+    import gspread
+    from gspread_dataframe import set_with_dataframe
+    from gspread_dataframe import get_as_dataframe
+    from google.auth import default
+    creds, _ = default()
+
+    gc = gspread.authorize(creds)
+    wb2 = gc.open_by_url(url)
+
+    wb2.values_clear(clearspace.format(sheet_name))
+
+    sheet_destination_sheet = wb2.worksheet(sheet_name)
+    set_with_dataframe(sheet_destination_sheet, df, row=my_index_startrow, include_column_header=True) 
+    
     
